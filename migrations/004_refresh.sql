@@ -1,0 +1,3 @@
+REFRESH MATERIALIZED VIEW top_products_30ds;
+
+REFRESH MATERIALIZED VIEW revenue_snapshots_30ds;
