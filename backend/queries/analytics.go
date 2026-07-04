@@ -81,3 +81,26 @@ func GetRevenue(db *sql.DB) ([]Revenue, error) {
 	return snapshots, nil
 
 }
+
+type OrdersSummary struct {
+	TotalOrders  int     `json:"total_orders"`
+	TotalRevenue float64 `json:"total_revenue"`
+}
+
+func GetOrdersSummary(db *sql.DB) ([]OrdersSummary, error) {
+	rows, err := db.Query("SELECT total_orders, total_revenue FROM orders_summary")
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var res []OrdersSummary
+
+	for rows.Next() {
+		var o OrdersSummary
+		rows.Scan(&o.TotalOrders, &o.TotalRevenue)
+		res = append(res, o)
+	}
+
+	return res, nil
+}

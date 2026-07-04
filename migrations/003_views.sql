@@ -20,6 +20,11 @@ CREATE VIEW category_tree AS WITH recursive tree AS (
 SELECT *
 FROM tree;
 
+CREATE VIEW orders_summary AS
+SELECT COUNT(*) AS total_orders,
+    COALESCE(SUM(amount), 0) AS total_revenue
+FROM orders;
+
 CREATE MATERIALIZED VIEW top_products_30ds AS
 SELECT p.id,
     p.name,

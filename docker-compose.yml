@@ -1,8 +1,9 @@
+version: "3.9"
+
 services:
+
   db:
     image: postgres:16
-    container_name: my_postgres
-    restart: always
     environment:
       POSTGRES_USER: dev_user
       POSTGRES_PASSWORD: dev_pass_301
@@ -12,6 +13,22 @@ services:
     volumes:
       - db_data:/var/lib/postgresql/data
       - ./migrations:/docker-entrypoint-initdb.d
+
+  backend:
+    build: ./backend
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+
+  frontend:
+    image: nginx:alpine
+    volumes:
+      - ./frontend:/usr/share/nginx/html
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
 
 volumes:
   db_data:
