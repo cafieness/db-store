@@ -1,6 +1,8 @@
 # **E-commerce Analytics Dashboard**
 
-This is a analytics dashboard simulating real-time e-commerce activity
+Small e-commerse analytics dashboard built with Go and Postgresql
+
+This project simulates store activity and shows analytics based on generated users, orders, products, product views
 
 ---
 
@@ -16,16 +18,16 @@ The system simulates an online store and shows basic analytics such as:
 
 
 
-There is also analytics for all time/30 last days and it is generated automatically to simulate real activity in real time
+There is also analytics for all time/last 30 days and it is generated automatically to simulate real activity in real time
 
 ---
 
 ## How to run the project
 
-The easiest way to run everything is with Docker:
+The easiest way to run everything is with docker:
 
 ```
-docker compose up --build
+docker compose up --build -d
 ```
 
 Then open:
@@ -35,6 +37,8 @@ Then open:
 
 - Backend: [localhost:8080](http://localhost:8080)
 
+- Health check: [localhost:8080/health](http://localhost:8080/health)
+
 ---
 ## Architecture
 
@@ -42,16 +46,19 @@ Then open:
 
 ### *Backend (GO)*
 
-- REST API server
+- rest api server
 - connects to PostgreSQL
 - serves analytics data
 - runs background worker to generate fake activity
+- runs a worker that refreshes analytics data
 
 
 ### *Database (PostgreSQL)*
 
 - stores users, orders, products, and analytics data
-- uses materialized views for fast analytics queries
+- uses views and materialized views for analytics
+- uses indexes for commonly queried columns
+- includes a recursive category tree
 
 ### *Frontend*
 
@@ -65,7 +72,7 @@ Then open:
 ---
 ## How data works
 
-A background worker generates fake activity every few seconds:
+A background simulator generates fake activity every few seconds:
 
 - new orders are created
 - order items are added
@@ -77,8 +84,8 @@ Materialized views are refreshed periodically to update analytics
 
 ## Performance & Indexes (EXPLAIN ANALYZE)
 
-The database uses indexes to speed up frequent queries
-We verified performance using `EXPLAIN ANALYZE`
+The database uses indexes to speed up frequently used queries
+Query performance was checked using `EXPLAIN ANALYZE`
 
 
 #### 1. Orders by user
@@ -97,7 +104,7 @@ Planning Time: 0.067 ms
 Execution Time: 0.034 ms
 ```
 PostgreSQL chose Seq Scan over index scan due to small dataset size
-Index `idx_orders_user_id` would activate on larger datasets (10k+ rows)
+Index `idx_orders_user_id`
 
 #### 2. Orders by date range
 
@@ -160,30 +167,21 @@ Execution Time: 0.031 ms
 
 ## API endpoints
 
+> GET /health - app and db health check
 > GET /analytics/revenue - revenue + orders summary
 > GET /analytics/top-products - most sold products
 > GET /analytics/productview - product views analytics
 > GET /analytics/orders-summary - total order stats
 
-
----
-
-## Tech Stack
-
-| Technology | Version | Purpose |
-|---|---|---|
-| Go | 1.23.4 | REST API, background worker |
-| PostgreSQL | 16 | Database |
-| Docker | 29.5.3 | Containerization |
-
-
 ---
 ## Notes
 
-This project is not production-ready.
-It is mainly built for learning purposes:
+This project was built for practice:
 
-- SQL practice
+- Postgresql
 - backend architecture understanding
 - data aggregation concepts
-- simple dashboard visualization
+- docker
+- ci
+- db indexes
+- views and materialized views
