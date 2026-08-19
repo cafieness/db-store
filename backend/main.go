@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 
 	"github.com/cafieness/db-store.git/backend/queries"
 	"github.com/cafieness/db-store.git/backend/worker"
@@ -14,16 +15,33 @@ import (
 )
 
 func main() {
-	db, err := sql.Open("postgres", "postgres://dev_user:dev_pass_301@db:5432/app_db?sslmode=disable")
+	databaseURL := os.Getenv("DATABASE_URL")
+	db, err := sql.Open("postgres", databaseURL)
 	if err != nil {
 		log.Fatal("Database connection error:", err)
 	}
 	if err := db.Ping(); err != nil {
 		log.Fatal("Ping error:", err)
 	}
-	fmt.Println("Connected to database!")
+	log.Println("Connected to database!")
 
 	mux := http.NewServeMux()
+
+	mux.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
+		if err := db.PingContext(r.Context()); err != nil {
+			http.Error(w, "database unavailable", http.StatusServiceUnavailable)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+
+		if err := json.NewEncoder(w).Encode(map[string]string{
+			"status": "ok",
+		}); err != nil {
+			log.Println("health response encode error:", err)
+		}
+	})
+
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "Server Started!")
 	})

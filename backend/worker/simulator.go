@@ -2,7 +2,7 @@ package worker
 
 import (
 	"database/sql"
-	"fmt"
+	"log"
 	"math/rand/v2"
 	"time"
 )
@@ -27,30 +27,35 @@ func generateActivity(db *sql.DB) {
 	).Scan(&orderID)
 
 	if err != nil {
+		log.Println("insert order error:", err)
 		return
 	}
 
 	for i := 0; i < rand.IntN(3)+1; i++ {
 		productID := rand.IntN(10) + 1
 
-		db.Exec(
+		if _, err := db.Exec(
 			"insert into order_items (product_id, order_id, unit_price, quantity) values ($1, $2, $3, $4)",
 			productID,
 			orderID,
 			rand.IntN(100)+1,
 			rand.IntN(3)+1,
-		)
+		); err != nil {
+			log.Println("insert into order items error:", err)
+		}
 	}
 
 	for i := 0; i < rand.IntN(5)+1; i++ {
-		db.Exec(
+		if _, err := db.Exec(
 			"insert into product_view (product_id, user_id) values ($1, $2)",
 			rand.IntN(10)+1,
 			userID,
-		)
+		); err != nil {
+			log.Println("insert into product_view error:", err)
+		}
 	}
 
-	fmt.Println("generated fake activity")
+	log.Println("generated fake activity")
 }
 
 func StartSimulator(db *sql.DB) {

@@ -26,6 +26,10 @@ func GetTopProducts(db *sql.DB) ([]TopProduct, error) {
 		products = append(products, p)
 	}
 
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
 	return products, nil
 
 }
@@ -50,6 +54,10 @@ func GetProductViews(db *sql.DB) ([]ProductViews, error) {
 			return nil, err
 		}
 		views = append(views, p)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 
 	return views, nil
@@ -78,6 +86,10 @@ func GetRevenue(db *sql.DB) ([]Revenue, error) {
 		snapshots = append(snapshots, p)
 	}
 
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
 	return snapshots, nil
 
 }
@@ -98,8 +110,13 @@ func GetOrdersSummary(db *sql.DB) ([]OrdersSummary, error) {
 
 	for rows.Next() {
 		var o OrdersSummary
-		rows.Scan(&o.TotalOrders, &o.TotalRevenue)
+		if err := rows.Scan(&o.TotalOrders, &o.TotalRevenue); err != nil {
+			return nil, err
+		}
 		res = append(res, o)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 
 	return res, nil
